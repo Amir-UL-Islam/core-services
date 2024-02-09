@@ -1,0 +1,5 @@
+rootProject.name = 'core-services'
+include 'inventory'
+include 'products'
+include 'orders'
+
