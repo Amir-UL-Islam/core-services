@@ -4,8 +4,9 @@ import com.inventory.service.InventoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Set;
+
 @RestController
-@RequestMapping("/api/v1/inventory")
 public class InventoryController {
     private final InventoryService inventoryService;
 
@@ -14,11 +15,17 @@ public class InventoryController {
         this.inventoryService = inventoryService;
     }
 
-    @GetMapping
+    @GetMapping("api/v1/check-is-in-stock")
     public boolean checkInventory(
             @RequestParam("skuCode") String skuCode
     ) {
         return inventoryService.isInStock(skuCode);
     }
 
+    @GetMapping("api/v2/check-is-in-stock")
+    public boolean checkInventory(
+            @RequestParam("skuCode") Set<String> skuCode
+    ) {
+        return inventoryService.isInStock(skuCode);
+    }
 }
