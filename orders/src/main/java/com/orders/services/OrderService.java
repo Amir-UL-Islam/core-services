@@ -33,6 +33,7 @@ public class OrderService {
                 .toList();
         items.forEach(item -> item.setItemStack(orderStack));
         orderStack.setOrderItems(items);
+        // Before Saving Order we need confirm weather this item is in our Inventory or not
         repository.save(orderStack);
     }
 

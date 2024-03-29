@@ -24,6 +24,10 @@ allprojects {
 
         // Test
         testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+        // Spring WebFlux
+        implementation 'org.springframework:spring-webflux:6.0.18'
+
     }
 
 }
