@@ -11,6 +11,7 @@ import java.util.Date;
 import java.util.List;
 
 @Data
+@NoArgsConstructor
 @Entity
 public class OrderStack implements Serializable {
     @Id

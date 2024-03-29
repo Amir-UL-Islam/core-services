@@ -9,6 +9,7 @@ import java.io.Serializable;
 import java.util.Date;
 
 @Data
+@NoArgsConstructor
 @Entity
 public class PlacedItems implements Serializable {
     @Id
@@ -32,6 +33,21 @@ public class PlacedItems implements Serializable {
     @ManyToOne(cascade = {CascadeType.MERGE}, fetch = FetchType.EAGER)
     @JoinColumn(name = "order_stack_id", referencedColumnName = "id")
     private OrderStack itemStack;
+
+    @Override
+    public String toString() {
+        return "PlacedItems{" +
+                "id=" + id +
+                ", dateCreated=" + dateCreated +
+                ", lastUpdated=" + lastUpdated +
+                ", skuCode='" + skuCode + '\'' +
+                ", unitePrice=" + unitePrice +
+                ", quantity=" + quantity +
+//                ", itemStack=" + itemStack + // This will cause a stack overflow error Because of the circular reference
+//                 Both OrderStack and PlacedItems have a reference to each other
+//                 And they are trying to print each other
+                '}';
+    }
 }
 
 
