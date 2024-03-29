@@ -7,7 +7,6 @@ import com.orders.model.entites.PlacedItems;
 import com.orders.model.mappers.PlacedItemsMapper;
 import com.orders.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +31,7 @@ public class OrderService {
                 .stream()
                 .map(mapper::mapTo)
                 .toList();
+        items.forEach(item -> item.setItemStack(orderStack));
         orderStack.setOrderItems(items);
         repository.save(orderStack);
     }
