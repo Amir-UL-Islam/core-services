@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class NewlyCreatedItemResponse {
+public class NewCreatedItemResponse {
     private String name;
     private String description;
     private Long price;

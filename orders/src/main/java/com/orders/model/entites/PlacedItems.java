@@ -29,8 +29,8 @@ public class PlacedItems implements Serializable {
 
     private Long quantity;
 
-    @ManyToOne
-    @JoinColumn(name = "order_stack_id")
+    @ManyToOne(cascade = {CascadeType.MERGE}, fetch = FetchType.EAGER)
+    @JoinColumn(name = "order_stack_id", referencedColumnName = "id")
     private OrderStack itemStack;
 }
 

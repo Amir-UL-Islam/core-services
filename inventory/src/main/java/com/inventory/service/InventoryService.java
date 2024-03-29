@@ -15,7 +15,6 @@ public class InventoryService {
         this.inventoryRepository = inventoryRepository;
     }
 
-
     @Transactional(readOnly = true)
     public boolean isInStock(String skuCode) {
         return inventoryRepository.existsBySkuCode(skuCode);

@@ -21,20 +21,12 @@ repositories {
     mavenCentral()
 }
 
+apply from: "${rootProject.projectDir}/build.gradle"
 
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
     implementation 'org.springframework.boot:spring-boot-starter-web'
 
-    // Tools
-    compileOnly 'org.projectlombok:lombok'
-    annotationProcessor 'org.projectlombok:lombok'
-    developmentOnly 'org.springframework.boot:spring-boot-devtools'
-
-    // Test
-    implementation platform('org.testcontainers:testcontainers-bom:1.19.3') //import bom
-    testImplementation "org.testcontainers:junit-jupiter:1.19.3"
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
 tasks.named('bootBuildImage') {

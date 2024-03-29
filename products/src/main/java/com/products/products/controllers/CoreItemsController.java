@@ -1,7 +1,7 @@
 package com.products.products.controllers;
 
 import com.products.products.model.dtos.NewItemRequest;
-import com.products.products.model.dtos.NewlyCreatedItemResponse;
+import com.products.products.model.dtos.NewCreatedItemResponse;
 import com.products.products.services.CoreItemService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -28,7 +28,7 @@ public class CoreItemsController {
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public List<NewlyCreatedItemResponse> find() {
+    public List<NewCreatedItemResponse> find() {
         return itemsService.find();
     }
 

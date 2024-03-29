@@ -1,4 +1,4 @@
-package com.products.products.repos;
+package com.products.products.repository;
 
 import com.products.products.model.entitis.CoreItem;
 import org.springframework.data.mongodb.repository.MongoRepository;

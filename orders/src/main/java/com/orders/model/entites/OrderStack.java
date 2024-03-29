@@ -6,6 +6,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -30,9 +31,11 @@ public class OrderStack implements Serializable {
     @OneToMany(
             cascade = CascadeType.ALL,
             orphanRemoval = true,
-            fetch = FetchType.EAGER
-//            mappedBy = "itemStack" // The mappedBy value should refer to property name of the owner class.
+            targetEntity = PlacedItems.class,
+            fetch = FetchType.EAGER,
+            mappedBy = "itemStack" // The mappedBy value should refer to property name of the owner class.
             // In this case the property name of the Orders class is item[private Orders item;]
     )
-    private List<PlacedItems> orderItems;
+    @OrderBy("dateCreated ASC")
+    private List<PlacedItems> orderItems = new ArrayList<>();
 }

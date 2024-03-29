@@ -1,9 +1,9 @@
 package com.products.products.services;
 
 import com.products.products.model.dtos.NewItemRequest;
-import com.products.products.model.dtos.NewlyCreatedItemResponse;
+import com.products.products.model.dtos.NewCreatedItemResponse;
 import com.products.products.model.entitis.CoreItem;
-import com.products.products.repos.CoreItemRepo;
+import com.products.products.repository.CoreItemRepo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -30,8 +30,8 @@ public class CoreItemService {
         log.info("New Item to be added in Record is this: {} ", entity);
     }
 
-    public List<NewlyCreatedItemResponse> find() {
-        return coreItemRepo.findAll().stream().map(item -> NewlyCreatedItemResponse.builder()
+    public List<NewCreatedItemResponse> find() {
+        return coreItemRepo.findAll().stream().map(item -> NewCreatedItemResponse.builder()
                 .name(item.getName())
                 .description(item.getDescription())
                 .price(item.getPrice())

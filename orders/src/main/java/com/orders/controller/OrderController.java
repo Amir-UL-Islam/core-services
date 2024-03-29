@@ -38,27 +38,4 @@ public class OrderController {
     public List<OrderStackDto> getAllOrder() {
         return orderService.getAllOrder();
     }
-
-
-    //TEST Alozo
-    @GetMapping("/test")
-    public ResponseEntity<Objects> test() {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-        headers.set("X-API-KEY", "alozo-api-user-app");
-        headers.set("X-API-SECRET", "zKk3KgMJG4XJbHuHssPuCBJQ");
-
-        HttpEntity<String> entity = new HttpEntity<>("body", headers);
-
-
-        RestTemplate restTemplate = new RestTemplate();
-        return restTemplate.exchange(
-                "http://localhost:8080/test",
-                HttpMethod.GET,
-                entity,
-                Objects.class
-        );
-
-    }
-
 }
