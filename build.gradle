@@ -1,9 +1,13 @@
 group = 'org.coreservices'
 version = '1.0-SNAPSHOT'
+ext {
+    set('springCloudVersion', "2022.0.5")
+}
 
 allprojects {
 
     repositories {
+        google()
         mavenLocal()
         mavenCentral()
     }
@@ -19,15 +23,18 @@ allprojects {
         implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0'
 
         //Lombok
-        compileOnly 'org.projectlombok:lombok'
-        annotationProcessor 'org.projectlombok:lombok'
+        // Simply specify the version of Lombok to use with Transitive dependencies
+        compileOnly 'org.projectlombok:lombok:1.18.22'
+        annotationProcessor 'org.projectlombok:lombok:1.18.22'
 
         // Test
-        testImplementation 'org.springframework.boot:spring-boot-starter-test'
+        testImplementation 'org.springframework.boot:spring-boot-starter-test:3.1.8'
 
         // Spring WebFlux
         implementation 'org.springframework:spring-webflux:6.0.18'
 
+        implementation platform("org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}")
+        implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
     }
 
 }
