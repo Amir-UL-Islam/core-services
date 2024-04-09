@@ -11,6 +11,7 @@ import com.orders.model.entites.PlacedItems;
 import com.orders.model.mappers.PlacedItemsMapper;
 import com.orders.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
@@ -44,10 +45,10 @@ public class OrderService {
         orderStack.setOrderItems(items);
         // Before Saving Order we need confirm weather this item is in our Inventory or not
 
-        InventoryStockResponse[] inventoryStockResponses = clintConfig.WebClient()
+        InventoryStockResponse[] inventoryStockResponses = clintConfig.WebClientBuilder().build()
                 .get()
                 .uri(
-                        "http://localhost:8089/api/v3/check-is-in-stock",
+                        "http://inventory-service/api/v3/check-is-in-stock",
                         uriBuilder -> uriBuilder
                                 .queryParam(
                                         "skuCode",
@@ -57,6 +58,7 @@ public class OrderService {
                                 )
                                 .build()
                 )
+                .accept(MediaType.ALL)
                 .retrieve()
                 .bodyToMono(InventoryStockResponse[].class)
                 .block();
@@ -109,7 +111,7 @@ public class OrderService {
     }
 
     private Mono<Boolean> checkInventoryStock(String skuCode) {
-        return clintConfig.WebClient()
+        return clintConfig.WebClientBuilder().build()
                 .get()
                 .uri("http://localhost:8089/api/v3/check-is-in-stock?skuCode={skuCode}", skuCode)
                 .retrieve()
