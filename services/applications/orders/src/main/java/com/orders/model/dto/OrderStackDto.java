@@ -13,5 +13,5 @@ import java.util.List;
 @NoArgsConstructor
 public class OrderStackDto {
     private String orderNumber;
-    private List<PlacedItemsDto> orderLineItemsDtoList;
+    private List<PlacedItemsDto> orderLineItems;
 }

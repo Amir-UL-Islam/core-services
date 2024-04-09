@@ -33,6 +33,7 @@ allprojects {
         // Spring WebFlux
         implementation 'org.springframework:spring-webflux:6.0.18'
 
+        // Spring Cloud as Transitive dependencies
         implementation platform("org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}")
         implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
     }

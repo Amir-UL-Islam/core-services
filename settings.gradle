@@ -1,5 +1,17 @@
 rootProject.name = 'core-services'
-include 'inventory'
-include 'products'
-include 'orders'
-
+[dependencySource, servicesRootPath].each { root ->
+    File rootPath = file(root)
+    if (rootPath.exists()) {
+        ["library","applications"].each { subsection ->
+            File subsectionDirectory = new File(root, subsection)
+            if (subsectionDirectory.exists()) {
+                subsectionDirectory.list().each { name ->
+                    if (name != "empty" && name != ".DS_store") {
+                        include(name)
+                        project(":${name}").projectDir = new File(subsectionDirectory, name)
+                    }
+                }
+            }
+        }
+    }
+}
