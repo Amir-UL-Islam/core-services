@@ -37,7 +37,7 @@ public class OrderService {
 
         OrderStack orderStack = new OrderStack();
         orderStack.setOrderNumber(UUID.randomUUID().toString());
-        List<PlacedItems> items = orderStackDto.getOrderLineItemsDtoList()
+        List<PlacedItems> items = orderStackDto.getOrderLineItems()
                 .stream()
                 .map(mapper::mapTo)
                 .toList();
@@ -78,7 +78,7 @@ public class OrderService {
     public void createOrderII(OrderStackDto orderStackDto) {
         OrderStack orderStack = new OrderStack();
         orderStack.setOrderNumber(UUID.randomUUID().toString());
-        List<PlacedItems> items = orderStackDto.getOrderLineItemsDtoList()
+        List<PlacedItems> items = orderStackDto.getOrderLineItems()
                 .stream()
                 .map(mapper::mapTo)
                 .toList();
@@ -149,7 +149,7 @@ public class OrderService {
     public List<OrderStackDto> getAllOrder() {
         return repository.findAll().stream().map(orderStack -> OrderStackDto.builder()
                 .orderNumber(orderStack.getOrderNumber())
-                .orderLineItemsDtoList(orderStack.getOrderItems().stream().map(placedItems -> PlacedItemsDto.builder()
+                .orderLineItems(orderStack.getOrderItems().stream().map(placedItems -> PlacedItemsDto.builder()
                         .skuCode(placedItems.getSkuCode())
                         .unitePrice(placedItems.getUnitePrice())
                         .quantity(placedItems.getQuantity())

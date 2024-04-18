@@ -1,0 +1,51 @@
+// Common Plugins
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+apply plugin: 'com.google.cloud.tools.jib'
+
+// Auto Docker Image Generation
+// Common Plugin Jib Configuration
+jib {
+    from {
+        image = "eclipse-temurin:17.0.4.1_1-jre"
+        auth {
+            username = 'amir.ul.islam55971@gmail.com'
+            //pass these through a gradle.properties file or as cmd-line args.
+            password = 'doc_fighter'
+        }
+    }
+
+    to {
+        image = "abc/${project.name}:${project.version}"
+        tags = ["latest"]
+        auth {
+            username = 'amir.ul.islam55971@gmail.com'
+            //pass these through a gradle.properties file or as cmd-line args.
+            password = 'doc_fighter'
+        }
+    }
+}
+
+// Common Dependencies
+dependencies {
+    testImplementation platform('org.junit:junit-bom:5.9.1')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+
+    //Swagger
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0'
+
+    //Lombok
+    // Simply specify the version of Lombok to use with Transitive dependencies
+    compileOnly 'org.projectlombok:lombok:1.18.22'
+    annotationProcessor 'org.projectlombok:lombok:1.18.22'
+
+    // Test
+    testImplementation 'org.springframework.boot:spring-boot-starter-test:3.1.8'
+
+    // Spring WebFlux
+    implementation 'org.springframework:spring-webflux:6.0.18'
+
+    // Spring Cloud as Transitive dependencies
+    implementation platform("org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}")
+    implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+}

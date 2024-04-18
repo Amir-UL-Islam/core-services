@@ -1,3 +1,10 @@
+plugins {
+    id 'org.springframework.boot' version '3.1.8' apply false
+    id 'io.spring.dependency-management' version '1.1.4' apply false
+    id 'com.google.cloud.tools.jib' version '3.4.2' apply false
+}
+
+
 group = 'org.coreservices'
 version = '1.0-SNAPSHOT'
 ext {
@@ -13,29 +20,40 @@ allprojects {
     }
 
     apply plugin: 'java'
+    apply plugin: 'idea'
 
     sourceCompatibility = '17'
-    dependencies {
-        testImplementation platform('org.junit:junit-bom:5.9.1')
-        testImplementation 'org.junit.jupiter:junit-jupiter'
-
-        //Swagger
-        implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0'
-
-        //Lombok
-        // Simply specify the version of Lombok to use with Transitive dependencies
-        compileOnly 'org.projectlombok:lombok:1.18.22'
-        annotationProcessor 'org.projectlombok:lombok:1.18.22'
-
-        // Test
-        testImplementation 'org.springframework.boot:spring-boot-starter-test:3.1.8'
-
-        // Spring WebFlux
-        implementation 'org.springframework:spring-webflux:6.0.18'
-
-        // Spring Cloud as Transitive dependencies
-        implementation platform("org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}")
-        implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
-    }
+    dependencies {}
 
 }
+
+Boolean isSpringBootProject(String name) {
+    String projectRoot = rootProject.projectDir
+    List projectRoots = [dependencySource, servicesRootPath]
+    for (String projectRootName : projectRoots) {
+        File rootPath = new File(projectRoot, projectRootName)
+        List applications = ["applications"]
+        for (String applicationName : applications) {
+            File subsectionDirectory = new File(rootPath, applicationName)
+            if (subsectionDirectory.exists()) {
+                if (subsectionDirectory.list().contains(name)) {
+                    return true
+                }
+
+            }
+        }
+    }
+    return false
+}
+
+
+subprojects { project ->
+    // Apply common dependencies to all projects except the server-location project
+    if (isSpringBootProject(project.name) && project.name != "server-location") {
+        println("Loading Applications: " + project.name)
+        apply from: "${rootProject.projectDir}/${commonDependencies}/dependencies.gradle"
+        bootJar { enabled = true }
+        jar { enabled = true }
+    }
+}
+

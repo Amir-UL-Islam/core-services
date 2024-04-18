@@ -1,0 +1,18 @@
+FROM eclipse-temurin:17.0.4.1_1-jdk AS build
+WORKDIR extracted
+
+ADD build/libs/inventory-1.0-SNAPSHOT.jar inventory.jar
+RUN java -Djarmode=layertools -jar inventory.jar extract
+
+FROM eclipse-temurin:17.0.4.1_1-jdk
+WORKDIR application
+
+COPY --from=build extracted/dependencies/ ./
+COPY --from=build extracted/spring-boot-loader/ ./
+COPY --from=build extracted/snapshot-dependencies/ ./
+COPY --from=build extracted/application/ ./
+
+EXPOSE 9988
+ENTRYPOINT ["java", "org.springframework.boot.loader.JarLauncher"]
+
+

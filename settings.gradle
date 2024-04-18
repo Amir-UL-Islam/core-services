@@ -2,7 +2,7 @@ rootProject.name = 'core-services'
 [dependencySource, servicesRootPath].each { root ->
     File rootPath = file(root)
     if (rootPath.exists()) {
-        ["library","applications"].each { subsection ->
+        ["library", "applications"].each { subsection ->
             File subsectionDirectory = new File(root, subsection)
             if (subsectionDirectory.exists()) {
                 subsectionDirectory.list().each { name ->
