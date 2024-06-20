@@ -1,31 +1,3 @@
-// Common Plugins
-apply plugin: 'org.springframework.boot'
-apply plugin: 'io.spring.dependency-management'
-apply plugin: 'com.google.cloud.tools.jib'
-
-// Auto Docker Image Generation
-// Common Plugin Jib Configuration
-jib {
-    from {
-        image = "eclipse-temurin:17.0.4.1_1-jre"
-        auth {
-            username = 'amir.ul.islam55971@gmail.com'
-            //pass these through a gradle.properties file or as cmd-line args.
-            password = 'doc_fighter'
-        }
-    }
-
-    to {
-        image = "abc/${project.name}:${project.version}"
-        tags = ["latest"]
-        auth {
-            username = 'amir.ul.islam55971@gmail.com'
-            //pass these through a gradle.properties file or as cmd-line args.
-            password = 'doc_fighter'
-        }
-    }
-}
-
 // Common Dependencies
 dependencies {
     testImplementation platform('org.junit:junit-bom:5.9.1')

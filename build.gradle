@@ -49,9 +49,12 @@ Boolean isSpringBootProject(String name) {
 
 subprojects { project ->
     // Apply common dependencies to all projects except the server-location project
-    if (isSpringBootProject(project.name) && project.name != "server-location") {
+    if (isSpringBootProject(project.name)) {
         println("Loading Applications: " + project.name)
-        apply from: "${rootProject.projectDir}/${commonDependencies}/dependencies.gradle"
+        apply from: "${rootProject.projectDir}/${commonDependencies}/plugins.gradle"
+        if (project.name != "server-location") {
+            apply from: "${rootProject.projectDir}/${commonDependencies}/dependencies.gradle"
+        }
         bootJar { enabled = true }
         jar { enabled = true }
     }
