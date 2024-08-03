@@ -104,9 +104,7 @@ public class OrderService {
                         throw new ProductNotInStockException("One or more products are not in stock");
                     }
                 },
-                throwable -> {
-                    handleStockCheckError(throwable);
-                }
+                this::handleStockCheckError
         );
     }
 
@@ -122,8 +120,7 @@ public class OrderService {
     }
 
     private void handleStockCheckError(Throwable throwable) {
-        if (throwable instanceof WebClientResponseException) {
-            WebClientResponseException responseException = (WebClientResponseException) throwable;
+        if (throwable instanceof WebClientResponseException responseException) {
             if (responseException.getStatusCode().is4xxClientError()) {
                 throw new ProductNotInStockException("Failed to check inventory stock: " + responseException.getRawStatusCode());
             } else if (responseException.getStatusCode().is5xxServerError()) {
@@ -134,8 +131,7 @@ public class OrderService {
     }
 
     private Throwable handleInventoryStockError(Throwable throwable) {
-        if (throwable instanceof WebClientResponseException) {
-            WebClientResponseException responseException = (WebClientResponseException) throwable;
+        if (throwable instanceof WebClientResponseException responseException) {
             if (responseException.getStatusCode().is4xxClientError()) {
                 return new ProductNotInStockException("Failed to check inventory stock: " + responseException.getRawStatusCode());
             } else if (responseException.getStatusCode().is5xxServerError()) {
