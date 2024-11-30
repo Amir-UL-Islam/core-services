@@ -2,9 +2,9 @@ spring:
   application:
     name: central-security
   datasource:
-    url: jdbc:postgresql://localhost:5432/central_security
-    username: postgres
-    password: postgres
+    url: "jdbc:postgresql://localhost:5432/central_security"
+    username: "postgres"
+    password: ""
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -20,9 +20,9 @@ spring:
       name: admin
       password: admin
 
-eureka:
-  client:
-    serviceUrl:
-      defaultZone: http://localhost:8761/eureka
-server:
-  port: 0
+#eureka:
+#  client:
+#    serviceUrl:
+#      defaultZone: http://localhost:8761/eureka
+#server:
+#  port: 0

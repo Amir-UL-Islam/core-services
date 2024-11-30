@@ -1,5 +1,6 @@
 package com.central.security.services;
 
+import com.central.security.model.entites.Users;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -19,21 +20,21 @@ public class JWTService {
     private static final String SIGNATURE_KEY = "YWlvayBsZW8gPSBBbWlyLVVMIElzbGFtIE9wdSBLaGFsaWZhIGFuZCBMRU8=";
 
     public String createToken(
-            UserDetails userDetails
+            Users userDetails
     ) {
         return createToken(new HashMap<>(), userDetails);
     }
 
     public String createToken(
             Map<String, Object> claims,
-            UserDetails userDetails
+            Users userDetails
     ) {
         return Jwts
                 .builder()
                 .setClaims(claims)
                 .setSubject(userDetails.getUsername())
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 5 * 1000 * 60))
+                .setExpiration(new Date(System.currentTimeMillis() + 100 * 1000 * 60))
                 .signWith(SignatureAlgorithm.HS256, getSecretKey())
                 .compact();
     }

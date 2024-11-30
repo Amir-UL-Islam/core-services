@@ -14,6 +14,7 @@ import org.springframework.security.authentication.LockedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 
@@ -24,11 +25,13 @@ public class AuthenticationAuthorizationService {
     private final UsersRepository repository;
     private final JWTService jwtService;
     private final UserMappers mappers;
+    private final RoleService roleService;
 
+    @Transactional
     public SuccessfulAuthentication register(Registration dto) {
         Users user = mappers.map(dto);
-        user.setRole(Role.USER);
-        repository.saveAndFlush(user);
+        user.getRoles().add(roleService.findByName(Role.USER.name()));
+        repository.save(user);
 
         String token = jwtService.createToken(user);
         return SuccessfulAuthentication.builder()

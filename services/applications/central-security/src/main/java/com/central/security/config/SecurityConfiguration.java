@@ -1,11 +1,14 @@
 package com.central.security.config;
 
+import com.central.security.model.dtos.PrivilegeDTO;
+import com.central.security.services.PrivilegeService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -14,55 +17,66 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import java.util.Collections;
 import java.util.List;
 
-import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
-
 @Configuration
 @EnableWebSecurity
 public class SecurityConfiguration {
+
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final AuthenticationProvider authenticationProvider;
+    private final PrivilegeService privilegeService;
 
-    public SecurityConfiguration(JwtAuthenticationFilter jwtAuthenticationFilter, AuthenticationProvider authenticationProvider) {
+    public SecurityConfiguration(JwtAuthenticationFilter jwtAuthenticationFilter, AuthenticationProvider authenticationProvider, PrivilegeService privilegeService) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.authenticationProvider = authenticationProvider;
+        this.privilegeService = privilegeService;
     }
 
     final String[] PERMIT_ALL = {
             "/api/v1/auth/**",
             "/api/v1/users/welcome",
             "/swagger-ui/**",
+            "/swagger-ui.html/**",
             "/swagger-resources/**",
             "/api-docs/**",
             "/v2/api-docs/**",
             "/v3/api-docs/**",
             "/webjars/**",
+            "/api/v1/privileges/**",
+            "/api/v1/roles/**",
             "/auth/**"
-
     };
+
     private CorsConfigurationSource corsConfigurationSource() {
         return request -> {
             CorsConfiguration cfg = new CorsConfiguration();
-            cfg.setAllowedOrigins(Collections.singletonList("*"));
-            cfg.setAllowedMethods(Collections.singletonList("*"));
+            cfg.setAllowedOrigins(Collections.singletonList("*")); // Allow all origins
+            cfg.setAllowedMethods(Collections.singletonList("*")); // Allow all methods
             cfg.setAllowCredentials(true);
-            cfg.setAllowedHeaders(Collections.singletonList("*"));
+            cfg.setAllowedHeaders(Collections.singletonList("*")); // Allow all headers
             cfg.setExposedHeaders(List.of("Authorization"));
             cfg.setMaxAge(3600L);
             return cfg;
         };
     }
 
-
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .sessionManagement(management -> management.sessionCreationPolicy(STATELESS))
-                .authorizeHttpRequests(requests -> requests.requestMatchers(PERMIT_ALL).permitAll())
-                .authorizeHttpRequests(requests -> requests.anyRequest().authenticated())
+                .sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> {
+                    auth.requestMatchers(PERMIT_ALL).permitAll();
+
+                    for (PrivilegeDTO privilege : privilegeService.getAllPrivilege()) {
+                        privilege.getAccessUrls()
+                                .forEach(url -> auth.requestMatchers(url).hasAuthority(privilege.getName()));
+                    }
+
+                    auth.anyRequest().authenticated();
+                })
                 .authenticationProvider(authenticationProvider)
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class); // Custom Filter
 
         return http.build();
     }

@@ -1,5 +1,6 @@
 package com.central.security.services;
 
+import com.central.security.model.entites.UserAuth;
 import com.central.security.model.entites.Users;
 import com.central.security.repositories.UsersRepository;
 import lombok.RequiredArgsConstructor;
@@ -18,8 +19,8 @@ public class UserServices implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return repository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        return new UserAuth(repository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found")));
 
     }
 

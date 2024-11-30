@@ -10,8 +10,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class Registration {
+    private Long created;
     private String username;
     private String password;
     private String phone;
     private String email;
+    private String firstName;
+    private String lastName;
+    private Byte gender;
 }
