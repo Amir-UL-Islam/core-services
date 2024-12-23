@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 @Service
-public class JWTService {
+public class JwtTokenService {
     private static final String SIGNATURE_KEY = "YWlvayBsZW8gPSBBbWlyLVVMIElzbGFtIE9wdSBLaGFsaWZhIGFuZCBMRU8=";
 
     public String createToken(

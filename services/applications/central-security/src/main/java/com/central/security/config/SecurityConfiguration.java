@@ -1,7 +1,5 @@
 package com.central.security.config;
 
-import com.central.security.model.dtos.PrivilegeDTO;
-import com.central.security.services.PrivilegeService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -23,12 +21,12 @@ public class SecurityConfiguration {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final AuthenticationProvider authenticationProvider;
-    private final PrivilegeService privilegeService;
+    private final ACLPermissionFilter aclPermissionFilter;
 
-    public SecurityConfiguration(JwtAuthenticationFilter jwtAuthenticationFilter, AuthenticationProvider authenticationProvider, PrivilegeService privilegeService) {
+    public SecurityConfiguration(JwtAuthenticationFilter jwtAuthenticationFilter, AuthenticationProvider authenticationProvider, ACLPermissionFilter aclPermissionFilter) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.authenticationProvider = authenticationProvider;
-        this.privilegeService = privilegeService;
+        this.aclPermissionFilter = aclPermissionFilter;
     }
 
     final String[] PERMIT_ALL = {
@@ -42,7 +40,10 @@ public class SecurityConfiguration {
             "/v3/api-docs/**",
             "/webjars/**",
             "/api/v1/privileges/**",
+            "/api/v1/permission/**",
+            "/api/v1/permission",
             "/api/v1/roles/**",
+            "/api/v1/roles",
             "/auth/**"
     };
 
@@ -67,16 +68,14 @@ public class SecurityConfiguration {
                 .sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> {
                     auth.requestMatchers(PERMIT_ALL).permitAll();
-
-                    for (PrivilegeDTO privilege : privilegeService.getAllPrivilege()) {
-                        privilege.getAccessUrls()
-                                .forEach(url -> auth.requestMatchers(url).hasAuthority(privilege.getName()));
-                    }
-
                     auth.anyRequest().authenticated();
                 })
                 .authenticationProvider(authenticationProvider)
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class); // Custom Filter
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(aclPermissionFilter, UsernamePasswordAuthenticationFilter.class)
+                .exceptionHandling(ex -> ex
+                        .accessDeniedHandler(new CustomAccessDeniedHandler())
+                );
 
         return http.build();
     }

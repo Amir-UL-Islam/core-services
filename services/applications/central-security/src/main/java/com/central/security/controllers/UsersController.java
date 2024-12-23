@@ -25,4 +25,14 @@ public class UsersController {
     public List<Users> getUsers() {
         return service.getUsers();
     }
+
+    @GetMapping("/test-admin-role")
+    public String getTestAdminRole() {
+        return "You have the admin role!";
+    }
+
+    @GetMapping("/test-user-role")
+    public String getTestUserRole() {
+        return "You have the user role!";
+    }
 }

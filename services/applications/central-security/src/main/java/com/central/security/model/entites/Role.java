@@ -1,13 +1,14 @@
 package com.central.security.model.entites;
 
+import com.central.security.model.enums.Permissions;
+import com.central.security.model.enums.Roles;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.annotations.Cache;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -21,10 +22,11 @@ public class Role {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, unique = true)
     private Date created;
 
-    @Column(nullable = false, unique = true)
-    private String name;
+    @Enumerated(EnumType.STRING)
+    private Roles name;
 
     private String description;
 
@@ -35,7 +37,7 @@ public class Role {
             joinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"),
             inverseJoinColumns = @JoinColumn(name = "privilege_id", referencedColumnName = "id")
     )
-    private List<Privilege> privileges;
+    private List<Privilege> privileges = new ArrayList<>();
 
     @Column(nullable = false)
     private boolean restricted = true;
@@ -46,7 +48,7 @@ public class Role {
 
     public boolean isAdmin() {
         return privileges != null && privileges.stream()
-                .anyMatch(privilege -> Privilege.Privileges.ADMINISTRATION.name().equals(privilege.getName()));
+                .anyMatch(privilege -> Permissions.ADMINISTRATION.name().equals(privilege.getName()));
     }
 
     public boolean isSameAs(Role role) {

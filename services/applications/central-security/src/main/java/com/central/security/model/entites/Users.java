@@ -4,9 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 @Getter
 @Setter
@@ -18,6 +16,7 @@ public class Users {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, unique = true)
     private Date created;
 
     @Column(name = "first_name", nullable = false)
@@ -44,7 +43,7 @@ public class Users {
             joinColumns = @JoinColumn(name = "users_id", referencedColumnName = "id"),
             inverseJoinColumns = @JoinColumn(name = "roles_id", referencedColumnName = "id")
     )
-    private List<Role> roles = new ArrayList<>();
+    private Set<Role> roles = new HashSet<>();
 
     private boolean enabled = true;
 
@@ -53,14 +52,6 @@ public class Users {
     private boolean accountNonLocked = true;
 
     private boolean credentialsNonExpired = true;
-
-    private String agreementId;
-
-    private String payerReference;
-
-    private String customerMsisdn;
-
-    private Boolean selfRegistered = false;
 
     public Users() {
     }
@@ -83,7 +74,7 @@ public class Users {
 
     public void grantRole(Role role) {
         if (this.roles == null)
-            this.roles = new ArrayList<>();
+            this.roles = new HashSet<>();
         // check if user already has that role
         if (!hasRole(role) && !role.isAdmin())
             this.roles.add(role);

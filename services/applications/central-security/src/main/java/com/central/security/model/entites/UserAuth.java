@@ -6,10 +6,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.*;
 
 
 public class UserAuth implements UserDetails {
@@ -33,7 +30,7 @@ public class UserAuth implements UserDetails {
 
     @Getter
     @Setter
-    private List<Role> roles;
+    private Set<Role> roles = new HashSet<>();
 
     private boolean enabled = true;
 
@@ -67,7 +64,7 @@ public class UserAuth implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        if (this.roles == null) this.roles = new ArrayList<>();
+        if (this.roles == null) this.roles = new HashSet<>();
         List<GrantedAuthority> authorityList = new ArrayList<>();
         for (Role role : this.roles) {
             if (role.getPrivileges() == null) continue;

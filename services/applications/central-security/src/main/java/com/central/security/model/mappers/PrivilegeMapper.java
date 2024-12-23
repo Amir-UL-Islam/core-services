@@ -2,11 +2,13 @@ package com.central.security.model.mappers;
 
 import com.central.security.model.dtos.PrivilegeDTO;
 import com.central.security.model.entites.Privilege;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
 
 @Component
+@RequiredArgsConstructor
 public class PrivilegeMapper {
     public Privilege map(PrivilegeDTO dto) {
         Privilege entity = new Privilege();
@@ -14,11 +16,21 @@ public class PrivilegeMapper {
         entity.setName(dto.getName());
         entity.setLabel(dto.getLabel());
         entity.setDescription(dto.getDescription());
-        entity.setAccessUrls(dto.getAccessUrls());
+        entity.setHttpMethod(dto.getHttpMethod());
+        entity.setUrlPattern(dto.getUrlPattern());
+        entity.setPermissions(dto.getPermissions());
         return entity;
     }
 
     public PrivilegeDTO map(Privilege entity) {
-        return new PrivilegeDTO(entity.getAccessUrls(), entity.getCreated().getTime(), entity.getDescription(), entity.getLabel(), entity.getName());
+        PrivilegeDTO dto = new PrivilegeDTO();
+        dto.setHttpMethod(entity.getHttpMethod());
+        dto.setUrlPattern(entity.getUrlPattern());
+        dto.setPermissions(entity.getPermissions());
+        dto.setCreated(entity.getCreated().getTime());
+        dto.setDescription(entity.getDescription());
+        dto.setLabel(entity.getLabel());
+        dto.setName(entity.getName());
+        return dto;
     }
 }

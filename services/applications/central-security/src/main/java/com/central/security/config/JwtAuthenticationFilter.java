@@ -1,6 +1,6 @@
 package com.central.security.config;
 
-import com.central.security.services.JWTService;
+import com.central.security.services.JwtTokenService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,7 +22,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private final JWTService jwtService;
+    private final JwtTokenService jwtTokenService;
     private final UserDetailsService userDetailsService;
 
     @Override
@@ -43,10 +43,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
         jwt = authHeader.substring(7);
-        userEmail = jwtService.getUsername(jwt);
+        userEmail = jwtTokenService.getUsername(jwt);
         if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
-            if (jwtService.validateToken(jwt, userDetails)) {
+            if (jwtTokenService.validateToken(jwt, userDetails)) {
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                         userDetails,
                         null,

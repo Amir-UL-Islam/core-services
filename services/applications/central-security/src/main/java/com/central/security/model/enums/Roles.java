@@ -1,5 +1,5 @@
 package com.central.security.model.enums;
 
-public enum Role {
+public enum Roles {
     ADMIN, USER, GUEST
 }

@@ -1,13 +1,11 @@
 package com.central.security.model.entites;
 
+import com.central.security.model.enums.Permissions;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.annotations.LazyCollection;
-import org.hibernate.annotations.LazyCollectionOption;
 
 import java.util.Date;
-import java.util.List;
 
 @Setter
 @Getter
@@ -17,7 +15,9 @@ public class Privilege {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, unique = true)
     private Date created;
+
     @Column(nullable = false, unique = true)
     private String name;
 
@@ -26,39 +26,13 @@ public class Privilege {
 
     private String description;
 
-    @ElementCollection
-    @LazyCollection(LazyCollectionOption.FALSE)
-    @CollectionTable(name = "privileges_access_urls")
-    private List<String> accessUrls;
+    @Column(name = "url_pattern", unique = true, nullable = false)
+    private String urlPattern;
 
-    public Privilege() {
-        // Default constructor
-    }
+    @Column(name = "http_method", nullable = false)
+    private String httpMethod;
 
-    public Privilege(String name, String label) {
-        this.name = name;
-        this.label = label;
-    }
-
-    public String[] accessesArr() {
-        return accessUrls.toArray(new String[0]);
-    }
-
-    public String accessesStr() {
-        return String.join(", ", accessUrls);
-    }
-
-
-    @Getter
-    public enum Privileges {
-        ADMINISTRATION("Administration"),
-        ACCESS_USER_RESOURCES("Access User Resources");
-
-        private final String label;
-
-        Privileges(String label) {
-            this.label = label;
-        }
-
-    }
+    @Column(name = "permission_type", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private Permissions permissions;
 }

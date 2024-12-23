@@ -4,7 +4,7 @@ import com.central.security.model.dtos.request.Authenticate;
 import com.central.security.model.dtos.request.Registration;
 import com.central.security.model.dtos.response.SuccessfulAuthentication;
 import com.central.security.model.entites.Users;
-import com.central.security.model.enums.Role;
+import com.central.security.model.enums.Roles;
 import com.central.security.model.mappers.UserMappers;
 import com.central.security.repositories.UsersRepository;
 import lombok.RequiredArgsConstructor;
@@ -20,20 +20,20 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
-public class AuthenticationAuthorizationService {
+public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final UsersRepository repository;
-    private final JWTService jwtService;
+    private final JwtTokenService jwtTokenService;
     private final UserMappers mappers;
     private final RoleService roleService;
 
     @Transactional
     public SuccessfulAuthentication register(Registration dto) {
         Users user = mappers.map(dto);
-        user.getRoles().add(roleService.findByName(Role.USER.name()));
+        user.getRoles().add(roleService.findByName(Roles.USER));
         repository.save(user);
 
-        String token = jwtService.createToken(user);
+        String token = jwtTokenService.createToken(user);
         return SuccessfulAuthentication.builder()
                 .username(user.getUsername())
                 .token(token)
@@ -55,7 +55,7 @@ public class AuthenticationAuthorizationService {
         Users user = repository.findByUsername(dto.getUsername()).orElseThrow(
                 () -> new UsernameNotFoundException("User not found")
         );
-        String token = jwtService.createToken(user);
+        String token = jwtTokenService.createToken(user);
         return SuccessfulAuthentication.builder()
                 .username(user.getUsername())
                 .token(token)

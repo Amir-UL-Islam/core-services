@@ -1,5 +1,6 @@
 package com.central.security.model.dtos;
 
+import com.central.security.model.enums.Roles;
 import lombok.Data;
 
 import java.util.List;
@@ -8,7 +9,7 @@ import java.util.List;
 public class RoleDTO {
     private Long created;
 
-    private String name;
+    private Roles name;
 
     private String description;
 
