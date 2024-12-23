@@ -28,14 +28,14 @@ public class OrderController {
     }
 
 
-    @PostMapping("api/v1/create-orders")
+    @PostMapping("api/v1/orders")
     @ApiResponse(responseCode = "200", description = "Order placed successfully")
     public void createOrder(@RequestBody OrderStackDto orderStackDto) throws IllegalAccessException {
         orderService.createOrder(orderStackDto);
         log.info("Order placed successfully");
     }
 
-    @PostMapping("api/v2/create-orders")
+    @PostMapping("api/v2/orders")
     @ApiResponse(responseCode = "200", description = "Order placed successfully")
     public void createOrderII(@RequestBody OrderStackDto orderStackDto) {
         orderService.createOrderII(orderStackDto);
