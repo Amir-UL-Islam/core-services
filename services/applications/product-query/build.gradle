@@ -1,4 +1,4 @@
-group = 'com.products'
+group = 'com.product-query'
 version = '0.0.1-SNAPSHOT'
 
 java {
