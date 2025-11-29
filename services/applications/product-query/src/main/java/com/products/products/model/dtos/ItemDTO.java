@@ -6,10 +6,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
 @Builder
-public class NewItemRequest {
+@NoArgsConstructor
+@AllArgsConstructor
+public class ItemDTO {
     private String name;
     private String description;
     private Long price;

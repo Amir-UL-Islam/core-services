@@ -1,25 +1,21 @@
 package com.products.products.services;
 
-import com.products.products.model.dtos.NewCreatedItemResponse;
-import com.products.products.repository.CoreItemRepo;
+import com.products.products.model.dtos.ItemDTO;
+import com.products.products.repository.CoreItemRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-@Service
 @Slf4j
+@Service
+@RequiredArgsConstructor
 public class CoreItemService {
-    private final CoreItemRepo coreItemRepo;
+    private final CoreItemRepository coreItemRepo;
 
-    @Autowired
-    public CoreItemService(CoreItemRepo coreItemRepo) {
-        this.coreItemRepo = coreItemRepo;
-    }
-
-    public List<NewCreatedItemResponse> find() {
-        return coreItemRepo.findAll().stream().map(item -> NewCreatedItemResponse.builder()
+    public List<ItemDTO> find() {
+        return coreItemRepo.findAll().stream().map(item -> ItemDTO.builder()
                 .name(item.getName())
                 .description(item.getDescription())
                 .price(item.getPrice())

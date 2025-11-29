@@ -2,10 +2,9 @@ spring:
   application:
     name: central-security
   datasource:
-    url: "jdbc:postgresql://localhost:5432/central_security"
-    username: "postgres"
-    password: ""
-    driver-class-name: org.postgresql.Driver
+    url: "jdbc:mysql://localhost:3306/central_security"
+    username: "root"
+    password: "password"
   jpa:
     hibernate:
       ddl-auto: create-drop
@@ -13,16 +12,15 @@ spring:
     properties:
       hibernate:
         format_sql: true
-    database: postgresql
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    database: mysql
   security:
     user:
       name: admin
-      password: admin
+      password: 123456
 
-#eureka:
-#  client:
-#    serviceUrl:
-#      defaultZone: http://localhost:8761/eureka
-#server:
-#  port: 0
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka
+server:
+  port: 0

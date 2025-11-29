@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class NewItemRequest {
+public class ItemDTO {
     private String name;
     private String description;
     private Long price;

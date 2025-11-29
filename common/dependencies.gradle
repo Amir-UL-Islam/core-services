@@ -1,5 +1,5 @@
 ext {
-    set('springCloudVersion', "2022.0.5")
+    set('springCloudVersion', "2025.1.0")
 }
 
 
@@ -13,19 +13,18 @@ dependencies {
 
     //Lombok
     // Simply specify the version of Lombok to use with Transitive dependencies
-    compileOnly 'org.projectlombok:lombok:1.18.22'
-    annotationProcessor 'org.projectlombok:lombok:1.18.22'
-
-    // Test
-    testImplementation 'org.springframework.boot:spring-boot-starter-test:3.1.8'
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
 
     // Spring WebFlux
-    implementation 'org.springframework:spring-webflux:6.0.18'
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
+    // Spring Web
+    implementation 'org.springframework.boot:spring-boot-starter-webmvc'
 
     // Spring Cloud as Transitive dependencies
     implementation platform("org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}")
     implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
-
 
 
 }
