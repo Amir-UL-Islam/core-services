@@ -1,0 +1,625 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Admin Console</title>
+    <link rel="stylesheet" href="/assets/admin/styles.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body>
+<div class="container">
+    <header class="header">
+        <h1>Security Admin Console</h1>
+        <p>Roles &amp; privileges matrix, policy, SoD constraints, hierarchy, role dependencies, users, URL mappings, and patient records</p>
+    </header>
+
+    <!-- Login -->
+    <section class="card" id="auth-card">
+        <h2>Login</h2>
+        <form id="login-form" class="grid-form">
+            <label>Username <input id="username" value="superadmin"></label>
+            <label>Password <input id="password" type="password" value="superadmin123!"></label>
+            <label>OTP (optional) <input id="otp"></label>
+            <label>OTP Channel
+                <select id="otp-channel">
+                    <option value="">Auto</option>
+                    <option value="TOTP">TOTP</option>
+                    <option value="SMS">SMS</option>
+                    <option value="EMAIL">EMAIL</option>
+                </select>
+            </label>
+            <button type="submit">Sign In</button>
+        </form>
+        <p class="hint" id="mfa-challenge-hint"></p>
+        <p class="hint">Dev seed users: <code>superadmin/superadmin123!</code>, <code>admin/admin123!</code>, <code>moderator/moderator123!</code>, <code>nicu_admin/nicuadmin123!</code>, <code>hospital/hospital123!</code>, <code>ambulance/ambulance123!</code>, <code>user/user123!</code></p>
+        <pre id="auth-output"></pre>
+    </section>
+
+    <!-- Toolbar -->
+    <section class="toolbar hidden" id="toolbar">
+        <button id="refresh-btn">Refresh All</button>
+        <button id="logout-btn" class="danger">Logout</button>
+        <span id="identity"></span>
+    </section>
+
+    <!-- My Permissions summary -->
+    <section class="card hidden" id="matrix-card">
+        <h2>My Permissions</h2>
+        <div id="roles"></div>
+        <table id="matrix-table">
+            <thead>
+            <tr>
+                <th>Resource</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </section>
+
+    <!-- ─── Permission Matrix Grid (Alpine.js) ─────────────────────────── -->
+    <section class="card hidden" id="perm-matrix-card"
+             x-data="permMatrixApp()"
+             x-init="tryInit()">
+        <h2>Permission Matrix</h2>
+        <p class="hint">Full roles &times; privileges grid. Toggle checkboxes then click <strong>Save Changes</strong>.</p>
+
+        <div x-show="loading" class="hint">Loading matrix…</div>
+        <div x-show="!loading && roles.length">
+            <div class="matrix-scroll-wrapper">
+                <table class="perm-matrix">
+                    <thead>
+                    <tr>
+                        <th>Privilege</th>
+                        <template x-for="role in roles" :key="role.id">
+                            <th x-text="role.name"></th>
+                        </template>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <template x-for="priv in privileges" :key="priv.id">
+                        <tr>
+                            <td x-text="priv.name"></td>
+                            <template x-for="role in roles" :key="role.id">
+                                <td>
+                                    <input type="checkbox"
+                                           :checked="hasPrivilege(role.id, priv.id)"
+                                           :disabled="!canEdit"
+                                           @change="togglePrivilege(role.id, priv.id, $event)">
+                                </td>
+                            </template>
+                        </tr>
+                    </template>
+                    </tbody>
+                </table>
+            </div>
+            <div class="matrix-footer">
+                <span class="hint" x-show="pendingChanges > 0" x-text="pendingChanges + ' change(s) pending'"></span>
+                <template x-if="canEdit">
+                    <button @click="saveMatrix()" :disabled="pendingChanges === 0 || saving" class="success">
+                        <span x-text="saving ? 'Saving…' : 'Save Changes'"></span>
+                    </button>
+                </template>
+                <template x-if="canResetAll">
+                    <button @click="resetToDefaults()" :disabled="resetting" class="danger">
+                        <span x-text="resetting ? 'Resetting…' : 'Reset'"></span>
+                    </button>
+                </template>
+                <button @click="clear()" class="secondary">Clear</button>
+            </div>
+        </div>
+        <div x-show="!loading && !roles.length" class="hint">Missing matrix:read permission or no roles found.</div>
+    </section>
+
+    <!-- ─── Grouped Permission Matrix (Domain x CRUD) ─────────────────── -->
+    <section class="card hidden" id="perm-grouped-card"
+             x-data="groupedPermMatrixApp()"
+             x-init="tryInit()">
+        <h2>Permission Matrix by Domain (CRUD)</h2>
+        <p class="hint">Grant or revoke full CRUD operation sets per domain for each role. Existing privilege-level matrix remains unchanged.</p>
+
+        <div x-show="loading" class="hint">Loading grouped matrix…</div>
+        <div x-show="!loading && roles.length && domains.length">
+            <div class="matrix-scroll-wrapper">
+                <table class="perm-grouped-matrix">
+                    <thead>
+                    <tr>
+                        <th>Domain</th>
+                        <th>Action</th>
+                        <template x-for="role in roles" :key="role.id">
+                            <th x-text="role.name"></th>
+                        </template>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <template x-for="domain in domains" :key="domain">
+                        <template x-for="(action, index) in ['CREATE', 'READ', 'UPDATE', 'DELETE']" :key="domain + ':' + action">
+                            <tr>
+                                <td class="group-domain" x-text="domain"></td>
+                                <td><span class="badge" x-text="action"></span></td>
+                                <template x-for="role in roles" :key="role.id + ':' + domain + ':' + action">
+                                    <td>
+                                        <input type="checkbox"
+                                               :disabled="!canEdit || !hasAnyActionPrivileges(domain, action)"
+                                               :checked="hasDomainAction(role.id, domain, action)"
+                                               :title="isDomainActionPartial(role.id, domain, action) ? 'Partially assigned in this action group' : ''"
+                                               @change="toggleDomainAction(role.id, domain, action, $event)">
+                                        <span class="partial-pill" x-show="isDomainActionPartial(role.id, domain, action)">partial</span>
+                                    </td>
+                                </template>
+                            </tr>
+                        </template>
+                    </template>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="matrix-footer">
+                <span class="hint" x-show="pendingChanges > 0" x-text="pendingChanges + ' grouped change(s) pending'"></span>
+                <template x-if="canEdit">
+                    <button @click="save()" :disabled="pendingChanges === 0 || saving" class="success">
+                        <span x-text="saving ? 'Saving…' : 'Save Grouped Changes'"></span>
+                    </button>
+                </template>
+                <template x-if="canResetAll">
+                    <button @click="resetToDefaults()" :disabled="resetting" class="danger">
+                        <span x-text="resetting ? 'Resetting…' : 'Reset'"></span>
+                    </button>
+                </template>
+                <button @click="clear()" class="secondary">Clear</button>
+            </div>
+        </div>
+        <div x-show="!loading && (!roles.length || !domains.length)" class="hint">
+            Missing matrix:read permission or no grouped CRUD domains found.
+        </div>
+    </section>
+
+    <!-- Policy Drift Diagnostics -->
+    <section class="card hidden" id="drift-card">
+        <h2>Policy Drift Diagnostics</h2>
+        <p class="hint">Detects mismatches between endpoint annotations and URL policy mappings.</p>
+        <div id="drift-summary"></div>
+        <table class="data-table" id="drift-table">
+            <thead>
+            <tr>
+                <th>Severity</th>
+                <th>Type</th>
+                <th>Method</th>
+                <th>Endpoint</th>
+                <th>Authority</th>
+                <th>Details</th>
+            </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </section>
+
+    <!-- ─── Runtime Security Policy (toggle + channel checkboxes) ─────── -->
+    <section class="card hidden" id="policy-card"
+             x-data="policyApp()"
+             x-init="tryInit()">
+        <h2>Runtime Security Policy</h2>
+        <p class="hint">Controls registration verification channels and MFA factor policies.</p>
+
+        <div x-show="loading" class="hint">Loading policy…</div>
+
+        <div x-show="!loading">
+            <!-- Registration verification required -->
+            <h4>Registration Settings</h4>
+            <div>
+                <div class="toggle-row">
+                    <div>
+                        <div class="toggle-row-label">Registration Verification Required</div>
+                        <div class="toggle-row-desc">When enabled, new accounts require OTP verification before activation</div>
+                    </div>
+                    <label class="toggle">
+                        <input type="checkbox" x-model="verificationRequired" :disabled="!editable">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Registration channels -->
+            <h4 style="margin-top:16px">Registration Verification Channels</h4>
+            <p class="hint">Which channels are available for registration email/phone verification.</p>
+            <div class="channel-group" id="reg-channels">
+                <label class="channel-chip" :class="{ active: channels.EMAIL }" x-show="editable">
+                    <input type="checkbox" x-model="channels.EMAIL" :disabled="!editable"> EMAIL
+                </label>
+                <label class="channel-chip" :class="{ active: channels.SMS }" x-show="editable">
+                    <input type="checkbox" x-model="channels.SMS" :disabled="!editable"> SMS
+                </label>
+                <span x-show="!editable" class="hint" x-text="'Allowed: ' + registrationChannelsDisplay()"></span>
+            </div>
+
+            <h4 style="margin-top:16px">Registration Default Channel</h4>
+            <select x-model="defaultChannel" :disabled="!editable" style="width:180px">
+                <option value="EMAIL">EMAIL</option>
+                <option value="SMS">SMS</option>
+            </select>
+
+            <h4 style="margin-top:16px">Business Notification Media</h4>
+            <p class="hint">Configurable channels for bed reservation and referral notifications. Unimplemented channels fall back to SMS.</p>
+
+            <div>
+                <div class="hint">Default Notification Channels</div>
+                <div class="channel-group">
+                    <label class="channel-chip" :class="{ active: notificationDefaultChannels.SMS }">
+                        <input type="checkbox" x-model="notificationDefaultChannels.SMS" :disabled="!editable"> SMS
+                    </label>
+                    <label class="channel-chip" :class="{ active: notificationDefaultChannels.EMAIL }">
+                        <input type="checkbox" x-model="notificationDefaultChannels.EMAIL" :disabled="!editable"> EMAIL
+                    </label>
+                    <label class="channel-chip" :class="{ active: notificationDefaultChannels.PUSH }">
+                        <input type="checkbox" x-model="notificationDefaultChannels.PUSH" :disabled="!editable"> PUSH
+                    </label>
+                </div>
+                <span class="hint" x-show="!editable" x-text="'Default: ' + notificationChannelsDisplay(notificationDefaultChannels)"></span>
+            </div>
+
+            <div style="margin-top:12px">
+                <div class="hint">Bed Reservation Notification Channels</div>
+                <div class="channel-group">
+                    <label class="channel-chip" :class="{ active: bedReservationChannels.SMS }">
+                        <input type="checkbox" x-model="bedReservationChannels.SMS" :disabled="!editable"> SMS
+                    </label>
+                    <label class="channel-chip" :class="{ active: bedReservationChannels.EMAIL }">
+                        <input type="checkbox" x-model="bedReservationChannels.EMAIL" :disabled="!editable"> EMAIL
+                    </label>
+                    <label class="channel-chip" :class="{ active: bedReservationChannels.PUSH }">
+                        <input type="checkbox" x-model="bedReservationChannels.PUSH" :disabled="!editable"> PUSH
+                    </label>
+                </div>
+                <span class="hint" x-show="!editable" x-text="'Bed reservation: ' + notificationChannelsDisplay(bedReservationChannels)"></span>
+            </div>
+
+            <div style="margin-top:12px">
+                <div class="hint">Referral Notification Channels</div>
+                <div class="channel-group">
+                    <label class="channel-chip" :class="{ active: referralChannels.SMS }">
+                        <input type="checkbox" x-model="referralChannels.SMS" :disabled="!editable"> SMS
+                    </label>
+                    <label class="channel-chip" :class="{ active: referralChannels.EMAIL }">
+                        <input type="checkbox" x-model="referralChannels.EMAIL" :disabled="!editable"> EMAIL
+                    </label>
+                    <label class="channel-chip" :class="{ active: referralChannels.PUSH }">
+                        <input type="checkbox" x-model="referralChannels.PUSH" :disabled="!editable"> PUSH
+                    </label>
+                </div>
+                <span class="hint" x-show="!editable" x-text="'Referral: ' + notificationChannelsDisplay(referralChannels)"></span>
+            </div>
+
+            <!-- MFA settings as toggles -->
+            <h4 style="margin-top:16px">MFA Settings</h4>
+            <div>
+                <div class="toggle-row">
+                    <div>
+                        <div class="toggle-row-label">MFA Optional Per User</div>
+                        <div class="toggle-row-desc">Users can individually enable/disable MFA</div>
+                    </div>
+                    <label class="toggle">
+                        <input type="checkbox" x-model="mfaOptional" :disabled="!editable">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <h4 style="margin-top:16px">MFA Enforced Roles</h4>
+            <div class="channel-group">
+                <label class="channel-chip" :class="{ active: mfaRoles.SUPER_ADMIN }">
+                    <input type="checkbox" x-model="mfaRoles.SUPER_ADMIN" :disabled="!editable"> SUPER_ADMIN
+                </label>
+                <label class="channel-chip" :class="{ active: mfaRoles.ADMIN }">
+                    <input type="checkbox" x-model="mfaRoles.ADMIN" :disabled="!editable"> ADMIN
+                </label>
+                <label class="channel-chip" :class="{ active: mfaRoles.USER }">
+                    <input type="checkbox" x-model="mfaRoles.USER" :disabled="!editable"> USER
+                </label>
+                <label class="channel-chip" :class="{ active: mfaRoles.NICU_ADMIN }">
+                    <input type="checkbox" x-model="mfaRoles.NICU_ADMIN" :disabled="!editable"> NICU_ADMIN
+                </label>
+                <label class="channel-chip" :class="{ active: mfaRoles.HOSPITAL }">
+                    <input type="checkbox" x-model="mfaRoles.HOSPITAL" :disabled="!editable"> HOSPITAL
+                </label>
+                <label class="channel-chip" :class="{ active: mfaRoles.AMBULANCE }">
+                    <input type="checkbox" x-model="mfaRoles.AMBULANCE" :disabled="!editable"> AMBULANCE
+                </label>
+                <label class="channel-chip" :class="{ active: mfaRoles.MODERATOR }">
+                    <input type="checkbox" x-model="mfaRoles.MODERATOR" :disabled="!editable"> MODERATOR
+                </label>
+            </div>
+
+            <!-- MFA factors per role -->
+            <h4 style="margin-top:16px">MFA Allowed Factors per Role</h4>
+            <template x-for="roleKey in ['USER', 'ADMIN', 'SUPER_ADMIN']" :key="roleKey">
+                <div style="margin-bottom:8px">
+                    <div class="hint" x-text="roleKey + ' role'"></div>
+                    <div class="channel-group">
+                        <template x-for="factor in ['TOTP', 'SMS', 'EMAIL']" :key="factor">
+                            <label class="channel-chip" :class="{ active: mfaFactors[roleKey] && mfaFactors[roleKey][factor] }">
+                                <input type="checkbox"
+                                       :checked="mfaFactors[roleKey] && mfaFactors[roleKey][factor]"
+                                       :disabled="!editable"
+                                       @change="toggleFactor(roleKey, factor, $event)">
+                                <span x-text="factor"></span>
+                            </label>
+                        </template>
+                    </div>
+                </div>
+            </template>
+
+            <div style="margin-top:16px" x-show="editable">
+                <button @click="savePolicy()" :disabled="saving" class="success">
+                    <span x-text="saving ? 'Saving…' : 'Save Policy'"></span>
+                </button>
+            </div>
+            <p class="hint" x-show="!editable">Missing policy:manage permission — read-only view.</p>
+        </div>
+    </section>
+
+    <!-- ─── SoD Constraints ───────────────────────────────────────────── -->
+    <section class="card hidden" id="sod-card"
+             x-data="sodApp()"
+             x-init="tryInit()">
+        <h2>Separation of Duties (SoD) Constraints</h2>
+        <p class="hint">Static SoD prevents co-assignment of conflicting roles. Dynamic SoD prevents simultaneous activation.</p>
+
+        <div x-show="loading" class="hint">Loading SoD constraints…</div>
+
+        <div x-show="!loading && canManage" style="margin-bottom:16px">
+            <div class="grid-form">
+                <label>Role A <input x-model="form.roleNameA" placeholder="ADMIN"></label>
+                <label>Role B <input x-model="form.roleNameB" placeholder="SUPER_ADMIN"></label>
+                <label>Reason <input x-model="form.reason" placeholder="Conflict description"></label>
+                <label>Type
+                    <select x-model="form.dynamic">
+                        <option :value="false">Static (co-assignment forbidden)</option>
+                        <option :value="true">Dynamic (simultaneous activation forbidden)</option>
+                    </select>
+                </label>
+                <button @click="createConstraint()" :disabled="saving">Add Constraint</button>
+            </div>
+        </div>
+
+        <table class="data-table" x-show="!loading">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Role A</th>
+                <th>Role B</th>
+                <th>Type</th>
+                <th>Reason</th>
+                <th x-show="canManage">Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <template x-for="c in constraints" :key="c.id">
+                <tr>
+                    <td x-text="c.id"></td>
+                    <td x-text="c.roleNameA"></td>
+                    <td x-text="c.roleNameB"></td>
+                    <td>
+                        <span :class="c.dynamic ? 'sod-type-dynamic' : 'sod-type-static'"
+                              x-text="c.dynamic ? 'Dynamic' : 'Static'"></span>
+                    </td>
+                    <td x-text="c.reason || '—'"></td>
+                    <td x-show="canManage">
+                        <button class="danger" @click="deleteConstraint(c.id)">Delete</button>
+                    </td>
+                </tr>
+            </template>
+            <tr x-show="constraints.length === 0">
+                <td colspan="6" class="hint" style="text-align:center">No SoD constraints configured.</td>
+            </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <!-- ─── Role Hierarchy ────────────────────────────────────────────── -->
+    <section class="card hidden" id="hierarchy-card"
+             x-data="hierarchyApp()"
+             x-init="tryInit()">
+        <h2>Role Hierarchy</h2>
+        <p class="hint">Senior roles inherit all privileges of junior roles they dominate (NIST RBAC3).</p>
+
+        <div x-show="loading" class="hint">Loading hierarchy…</div>
+
+        <div x-show="!loading && canManage" style="margin-bottom:12px">
+            <div class="grid-form">
+                <label>Role (senior)
+                    <select x-model="form.roleId">
+                        <option value="">— select —</option>
+                        <template x-for="r in allRoles" :key="r.id">
+                            <option :value="r.id" x-text="r.name"></option>
+                        </template>
+                    </select>
+                </label>
+                <label>Dominates (junior parent, or clear)
+                    <select x-model="form.parentId">
+                        <option value="">— none / clear —</option>
+                        <template x-for="r in allRoles" :key="r.id">
+                            <option :value="r.id" x-text="r.name"></option>
+                        </template>
+                    </select>
+                </label>
+                <button @click="setParent()" :disabled="!form.roleId || saving">Set Parent</button>
+            </div>
+        </div>
+
+        <div x-show="!loading" class="hier-tree" id="hier-tree-container"></div>
+    </section>
+
+    <!-- Users -->
+    <section class="card hidden" id="users-card">
+        <h2>Users</h2>
+        <form id="create-user-form" class="grid-form"></form>
+        <table class="data-table" id="users-table">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Username</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>MFA</th>
+                <th>Roles</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </section>
+
+    <!-- Roles -->
+    <section class="card hidden" id="roles-card">
+        <h2>Roles</h2>
+        <form id="create-role-form" class="grid-form"></form>
+        <table class="data-table" id="roles-table">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Privileges</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </section>
+
+    <!-- Privileges -->
+    <section class="card hidden" id="privileges-card">
+        <h2>Privileges</h2>
+        <form id="create-privilege-form" class="grid-form"></form>
+        <table class="data-table" id="privileges-table">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </section>
+
+    <!-- URL Mappings -->
+    <section class="card hidden" id="urls-card">
+        <h2>URL Permission Mappings</h2>
+        <form id="create-url-form" class="grid-form"></form>
+        <table class="data-table" id="urls-table">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Endpoint</th>
+                <th>Method</th>
+                <th>Privileges</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </section>
+
+    <!-- ─── Role Dependencies ─────────────────────────────────────────── -->
+    <section class="card hidden" id="role-deps-card"
+             x-data="roleDepsApp()"
+             x-init="tryInit()">
+        <h2>Role Dependencies</h2>
+        <p class="hint">«A requires B» rules: when role A is assigned, role B must also be present. Enforced at role assignment time.</p>
+
+        <div x-show="loading" class="hint">Loading role dependencies…</div>
+
+        <div x-show="!loading && canManage" style="margin-bottom:16px">
+            <div class="grid-form">
+                <label>Dependent Role (requires…)
+                    <select x-model="form.dependentRoleId">
+                        <option value="">— select —</option>
+                        <template x-for="r in allRoles" :key="r.id">
+                            <option :value="r.id" x-text="r.name"></option>
+                        </template>
+                    </select>
+                </label>
+                <label>Required Role (must have)
+                    <select x-model="form.requiredRoleId">
+                        <option value="">— select —</option>
+                        <template x-for="r in allRoles" :key="r.id">
+                            <option :value="r.id" x-text="r.name"></option>
+                        </template>
+                    </select>
+                </label>
+                <label>Reason <input x-model="form.reason" placeholder="Optional explanation"></label>
+                <button @click="create()" :disabled="saving || !form.dependentRoleId || !form.requiredRoleId">Add Dependency</button>
+            </div>
+        </div>
+
+        <table class="data-table" x-show="!loading">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Dependent Role</th>
+                <th>Requires</th>
+                <th>Reason</th>
+                <th x-show="canManage">Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <template x-for="dep in deps" :key="dep.id">
+                <tr>
+                    <td x-text="dep.id"></td>
+                    <td><span class="badge" x-text="dep.dependentRoleName"></span></td>
+                    <td><span class="badge badge-success" x-text="dep.requiredRoleName"></span></td>
+                    <td x-text="dep.reason || '—'"></td>
+                    <td x-show="canManage">
+                        <button class="danger" @click="remove(dep.id)">Delete</button>
+                    </td>
+                </tr>
+            </template>
+            <tr x-show="deps.length === 0">
+                <td colspan="5" class="hint" style="text-align:center">No role dependencies configured.</td>
+            </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <!-- Patients (NICU babies — read-only view) -->
+    <section class="card hidden" id="patients-card">
+        <h2>Patients (NICU Babies)</h2>
+        <p class="hint">Read-only listing of registered NICU patients. Use the Admissions API to create/discharge.</p>
+        <table class="data-table" id="patients-table">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>MRN</th>
+                <th>Baby Name</th>
+                <th>Gender</th>
+                <th>Date of Birth</th>
+                <th>Blood Type</th>
+            </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </section>
+</div>
+
+<!-- ─── Shared Drawer (vanilla JS managed, Alpine.js animated) ──────── -->
+<div id="drawer" class="drawer-overlay hidden">
+    <div class="drawer-backdrop" onclick="closeDrawer()"></div>
+    <div class="drawer-panel">
+        <div class="drawer-header">
+            <h3 id="drawer-title"></h3>
+            <button class="drawer-close" onclick="closeDrawer()">&#x2715;</button>
+        </div>
+        <div class="drawer-body" id="drawer-body"></div>
+        <div class="drawer-footer">
+            <button class="secondary" onclick="closeDrawer()">Cancel</button>
+            <button id="drawer-save-btn">Save</button>
+        </div>
+    </div>
+</div>
+
+<script src="/assets/admin/app.js"></script>
+</body>
+</html>

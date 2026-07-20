@@ -1,0 +1,575 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f4f6f8;
+    color: #1c2530;
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.header {
+    margin-bottom: 16px;
+}
+
+.header h1 {
+    margin: 0 0 6px;
+}
+
+.card {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.grid-form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+    align-items: end;
+    margin-bottom: 12px;
+}
+
+.grid-form label {
+    display: flex;
+    flex-direction: column;
+    font-size: 12px;
+    gap: 5px;
+}
+
+input, select, button, textarea {
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid #c8d1dc;
+    font-size: 14px;
+}
+
+button {
+    cursor: pointer;
+    background: #0b69ff;
+    color: #fff;
+    border: 1px solid #0b69ff;
+}
+
+button.secondary {
+    background: #fff;
+    color: #0b69ff;
+}
+
+button.danger {
+    background: #d93025;
+    border-color: #d93025;
+}
+
+button.success {
+    background: #0d9245;
+    border-color: #0d9245;
+}
+
+button:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+}
+
+pre {
+    white-space: pre-wrap;
+    background: #101520;
+    color: #c4f1be;
+    padding: 8px;
+    border-radius: 6px;
+}
+
+.hint {
+    font-size: 12px;
+    color: #5f6c7b;
+}
+
+.data-table, #matrix-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-table th, .data-table td, #matrix-table th, #matrix-table td {
+    border-bottom: 1px solid #e2e8f0;
+    text-align: left;
+    padding: 8px;
+    font-size: 13px;
+    vertical-align: top;
+}
+
+.badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    background: #e6efff;
+    color: #0b69ff;
+    margin-right: 4px;
+    margin-bottom: 4px;
+    font-size: 12px;
+}
+
+.badge-warn {
+    background: #fff3cd;
+    color: #8a6d3b;
+}
+
+.badge-danger {
+    background: #fde8e8;
+    color: #9b1c1c;
+}
+
+.badge-success {
+    background: #d4edda;
+    color: #155724;
+}
+
+.actions {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+/* ─── Drawer ────────────────────────────────────────────────────────── */
+.drawer-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.drawer-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, .35);
+}
+
+.drawer-panel {
+    position: relative;
+    width: 480px;
+    max-width: 95vw;
+    height: 100%;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    box-shadow: -4px 0 24px rgba(0, 0, 0, .15);
+    animation: slideIn .2s ease;
+}
+
+@keyframes slideIn {
+    from { transform: translateX(100%); }
+    to   { transform: translateX(0); }
+}
+
+.drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.drawer-header h3 {
+    margin: 0;
+    font-size: 16px;
+}
+
+.drawer-close {
+    background: none;
+    border: none;
+    font-size: 22px;
+    line-height: 1;
+    color: #5f6c7b;
+    padding: 4px 8px;
+    cursor: pointer;
+}
+
+.drawer-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+.drawer-footer {
+    padding: 16px 20px;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+/* Fields inside drawer */
+.drawer-body label {
+    display: flex;
+    flex-direction: column;
+    font-size: 12px;
+    gap: 5px;
+    margin-bottom: 12px;
+}
+
+.drawer-body input,
+.drawer-body select,
+.drawer-body textarea {
+    width: 100%;
+}
+
+/* ─── Toggle switch ─────────────────────────────────────────────────── */
+.toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.toggle-row:last-child {
+    border-bottom: none;
+}
+
+.toggle-row-label {
+    font-size: 14px;
+}
+
+.toggle-row-desc {
+    font-size: 12px;
+    color: #5f6c7b;
+    margin-top: 2px;
+}
+
+.toggle {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+    flex-shrink: 0;
+}
+
+.toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    inset: 0;
+    background: #c8d1dc;
+    border-radius: 24px;
+    transition: .2s;
+    cursor: pointer;
+}
+
+.toggle-slider:before {
+    content: "";
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    left: 3px;
+    bottom: 3px;
+    background: #fff;
+    border-radius: 50%;
+    transition: .2s;
+}
+
+.toggle input:checked + .toggle-slider {
+    background: #0b69ff;
+}
+
+.toggle input:checked + .toggle-slider:before {
+    transform: translateX(20px);
+}
+
+.toggle input:disabled + .toggle-slider {
+    opacity: .5;
+    cursor: not-allowed;
+}
+
+/* ─── Channel checkbox group ────────────────────────────────────────── */
+.channel-group {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin: 8px 0;
+}
+
+.channel-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border: 2px solid #c8d1dc;
+    border-radius: 20px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+    user-select: none;
+}
+
+.channel-chip input[type="checkbox"] {
+    padding: 0;
+    border: none;
+    width: 14px;
+    height: 14px;
+    cursor: pointer;
+}
+
+.channel-chip.active {
+    border-color: #0b69ff;
+    background: #e6efff;
+    color: #0b69ff;
+}
+
+/* ─── Permission Matrix Grid ────────────────────────────────────────── */
+.matrix-scroll-wrapper {
+    overflow: auto;
+    max-height: 540px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    margin-bottom: 12px;
+}
+
+.perm-matrix {
+    border-collapse: collapse;
+    font-size: 12px;
+    min-width: 600px;
+}
+
+.perm-matrix th,
+.perm-matrix td {
+    border: 1px solid #e2e8f0;
+    padding: 5px 8px;
+    white-space: nowrap;
+    text-align: center;
+}
+
+.perm-matrix th {
+    background: #f8fafc;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    font-weight: 600;
+    font-size: 11px;
+}
+
+.perm-matrix td:first-child,
+.perm-matrix th:first-child {
+    text-align: left;
+    position: sticky;
+    left: 0;
+    background: #f8fafc;
+    z-index: 2;
+    min-width: 200px;
+    font-size: 12px;
+}
+
+.perm-matrix th:first-child {
+    z-index: 3;
+}
+
+.perm-matrix input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    padding: 0;
+    border: none;
+    cursor: pointer;
+}
+
+.perm-matrix tr:hover td {
+    background: #f0f7ff;
+}
+
+.perm-matrix tr:hover td:first-child {
+    background: #e6efff;
+}
+
+.matrix-footer {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.perm-grouped-matrix {
+    border-collapse: collapse;
+    font-size: 12px;
+    min-width: 760px;
+}
+
+.perm-grouped-matrix th,
+.perm-grouped-matrix td {
+    border: 1px solid #e2e8f0;
+    padding: 6px 8px;
+    white-space: nowrap;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.perm-grouped-matrix th {
+    background: #f8fafc;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    font-size: 11px;
+}
+
+.perm-grouped-matrix td:first-child,
+.perm-grouped-matrix th:first-child {
+    position: sticky;
+    left: 0;
+    background: #f8fafc;
+    z-index: 2;
+    text-align: left;
+    min-width: 170px;
+}
+
+.perm-grouped-matrix td:nth-child(2),
+.perm-grouped-matrix th:nth-child(2) {
+    position: sticky;
+    left: 170px;
+    background: #fff;
+    z-index: 2;
+    min-width: 110px;
+}
+
+.perm-grouped-matrix th:nth-child(2) {
+    background: #f8fafc;
+}
+
+.group-domain {
+    font-weight: 600;
+}
+
+.partial-pill {
+    display: inline-block;
+    margin-left: 4px;
+    padding: 1px 6px;
+    border-radius: 10px;
+    font-size: 10px;
+    background: #fff3cd;
+    color: #8a6d3b;
+}
+
+/* ─── Hierarchy tree ────────────────────────────────────────────────── */
+.hier-tree {
+    font-size: 13px;
+    line-height: 2;
+}
+
+.hier-node {
+    margin-left: 20px;
+    border-left: 2px solid #e2e8f0;
+    padding-left: 12px;
+}
+
+.hier-root {
+    margin-left: 0;
+    border-left: none;
+    padding-left: 0;
+}
+
+.hier-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* ─── Privilege checkbox grid (in drawer) ───────────────────────────── */
+.priv-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 6px;
+    max-height: 340px;
+    overflow-y: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 10px;
+    margin-bottom: 8px;
+}
+
+.priv-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    padding: 4px 6px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.priv-chip:hover {
+    background: #f0f7ff;
+}
+
+.priv-chip input {
+    padding: 0;
+    border: none;
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.priv-search {
+    width: 100%;
+    margin-bottom: 8px;
+}
+
+/* ─── SoD table ─────────────────────────────────────────────────────── */
+.sod-type-static  { color: #8a6d3b; background: #fff3cd; padding: 2px 8px; border-radius: 10px; font-size: 11px; }
+.sod-type-dynamic { color: #0b69ff; background: #e6efff; padding: 2px 8px; border-radius: 10px; font-size: 11px; }
+
+/* ─── Toast notifications ────────────────────────────────────────────────────── */
+.toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 300;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: none;
+}
+
+.toast {
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    background: #1c2530;
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(0,0,0,.2);
+    animation: fadeInUp .2s ease;
+    pointer-events: auto;
+    max-width: 360px;
+}
+
+.toast.toast-error { background: #d93025; }
+.toast.toast-success { background: #0d9245; }
+
+@keyframes fadeInUp {
+    from { transform: translateY(16px); opacity: 0; }
+    to   { transform: translateY(0); opacity: 1; }
+}
+
+/* ─── Data table row hover ───────────────────────────────────────────────────── */
+.data-table tr:hover td {
+    background: #f8fafc;
+}

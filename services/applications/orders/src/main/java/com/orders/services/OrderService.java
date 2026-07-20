@@ -122,9 +122,9 @@ public class OrderService {
     private void handleStockCheckError(Throwable throwable) {
         if (throwable instanceof WebClientResponseException responseException) {
             if (responseException.getStatusCode().is4xxClientError()) {
-                throw new ProductNotInStockException("Failed to check inventory stock: " + responseException.getRawStatusCode());
+                throw new ProductNotInStockException("Failed to check inventory stock: " + responseException.getStatusCode());
             } else if (responseException.getStatusCode().is5xxServerError()) {
-                throw new InventoryServiceUnavailableException("Inventory service is unavailable: " + responseException.getRawStatusCode());
+                throw new InventoryServiceUnavailableException("Inventory service is unavailable: " + responseException.getStatusCode());
             }
         }
         throw new RuntimeException("Failed to create order", throwable);
@@ -133,9 +133,9 @@ public class OrderService {
     private Throwable handleInventoryStockError(Throwable throwable) {
         if (throwable instanceof WebClientResponseException responseException) {
             if (responseException.getStatusCode().is4xxClientError()) {
-                return new ProductNotInStockException("Failed to check inventory stock: " + responseException.getRawStatusCode());
+                return new ProductNotInStockException("Failed to check inventory stock: " + responseException.getStatusCode());
             } else if (responseException.getStatusCode().is5xxServerError()) {
-                return new InventoryServiceUnavailableException("Inventory service is unavailable: " + responseException.getRawStatusCode());
+                return new InventoryServiceUnavailableException("Inventory service is unavailable: " + responseException.getStatusCode());
             }
         }
         return new RuntimeException("Failed to check inventory stock", throwable);

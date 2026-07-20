@@ -1,0 +1,79 @@
+package com.central.security.core.urls;
+
+import com.central.security.core.privilege.model.entity.Privilege;
+import com.central.security.core.privilege.repository.PrivilegeRepository;
+import com.central.security.core.security.oauth.PermissionCodes;
+
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import com.central.security.core.urls.model.EndpointPatternMatcher;
+import com.central.security.core.urls.model.entity.Url;
+import com.central.security.core.urls.repository.UrlsRepository;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.ApplicationArguments;
+import org.springframework.boot.ApplicationRunner;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
+import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
+
+@Component
+@Transactional
+@Order(4)
+@Slf4j
+public class EndpointSync implements ApplicationRunner {
+
+    private final RequestMappingHandlerMapping handlerMapping;
+    private final UrlsRepository urlsRepository;
+    private final PrivilegeRepository privilegeRepository;
+
+    public EndpointSync(final RequestMappingHandlerMapping handlerMapping,
+                        final UrlsRepository urlsRepository,
+                        final PrivilegeRepository privilegeRepository) {
+        this.handlerMapping = handlerMapping;
+        this.urlsRepository = urlsRepository;
+        this.privilegeRepository = privilegeRepository;
+    }
+
+    @Override
+    public void run(final ApplicationArguments args) {
+        final Privilege adminPrivilege = privilegeRepository.findByNameIgnoreCase(PermissionCodes.MATRIX_MANAGE)
+                .or(() -> privilegeRepository.findByNameIgnoreCase(PermissionCodes.ADMIN))
+                .orElse(null);
+        if (adminPrivilege == null) {
+            log.warn("MATRIX_MANAGE/ADMIN privilege missing; skipping endpoint sync");
+            return;
+        }
+
+        for (RequestMappingInfo info : handlerMapping.getHandlerMethods().keySet()) {
+            final Set<String> patterns = info.getPatternValues();
+            final Set<String> methods = info.getMethodsCondition().getMethods().isEmpty()
+                    ? Set.of("GET")
+                    : info.getMethodsCondition().getMethods().stream().map(Enum::name).collect(Collectors.toSet());
+            for (String pattern : patterns) {
+                // Only sync API endpoints; skip SPA forwarding, public auth, swagger, etc.
+                if (!pattern.startsWith("/api")) {
+                    continue;
+                }
+                for (String method : methods) {
+                    // Validate API design rules — fails startup if violated
+                    new EndpointPatternMatcher(pattern).validateApiDesignRules();
+
+                    if (urlsRepository.existsByEndpointIgnoreCaseAndMethodIgnoreCase(pattern, method)) {
+                        continue;
+                    }
+                    final Url url = new Url();
+                    url.setEndpoint(pattern);
+                    url.setMethod(method);
+                    adminPrivilege.getUrls().add(url);
+                    url.getPrivileges().add(adminPrivilege);
+                    urlsRepository.save(url);
+                    privilegeRepository.save(adminPrivilege);
+                    log.info("Synced endpoint {} {}", method, pattern);
+                }
+            }
+        }
+    }
+}

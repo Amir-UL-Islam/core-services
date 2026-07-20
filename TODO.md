@@ -1,0 +1,2 @@
+- Running individual service will first build the libraries and then dependencies but not the whole projects and all services.
+- Also running any individual service will check weather service discovery is running or not. If not running then it will start it.

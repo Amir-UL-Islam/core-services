@@ -1,18 +1,106 @@
 spring:
   application:
-    name: central-security
+    name: core-auth-server
+  profiles:
+    active: default
+
+  mail:
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+error:
+  handling:
+    http-status-in-json-response: true
+    exception-logging: NO_LOGGING
+    full-stacktrace-http-statuses: 5xx
+    log-levels:
+      5xx: ERROR
+    http-statuses:
+      org.springframework.security.authorization.AuthorizationDeniedException: unauthorized
+    codes:
+      UsersUsernameUnique: USERS_USERNAME_UNIQUE
+      RoleNameUnique: ROLE_NAME_UNIQUE
+      RoleDescriptionUnique: ROLE_DESCRIPTION_UNIQUE
+      PrivilegeNameUnique: PRIVILEGE_NAME_UNIQUE
+      UrlsEndpointUnique: URLS_ENDPOINT_UNIQUE
+
+springdoc:
+  swagger-ui:
+    doc-expansion: none
+    tags-sorter: alpha
+    operations-sorter: alpha
+    enabled: true
+  pathsToMatch: /api/**, /authenticate, /authenticateGoogle, /refresh-token, /register, /register/**
+
+security:
+  oauth2:
+    client-credentials:
+      access-token-ttl-seconds: 1800
+      clients:
+        partner-demo:
+          secret: "partner-secret-123"
+          secret-encoded: false
+          enabled: true
+          scopes: [ "m2m.read", "m2m.write" ]
+          authorities:
+            - "user:read"
+            - "hospital:read"
+            - "ambulance:read"
+            - "dashboard:read"
+    drift:
+      enabled: true
+      fail-on-drift: true
+  policy:
+    drift:
+      enabled: true
+      fail-on-drift: true
+  mfa:
+    otp:
+      ttl-seconds: 300
+      max-attempts: 5
+      code-length: 6
+      resend-cooldown-seconds: 30
+    email:
+      from: ${MAIL_FROM}
+      subject-prefix: "[Security OTP]"
+
+mimsms:
+  api: ${MIMSMS_API}
+  apiKey: ${MIMSMS_API_KEY}
+  apiSecret: ${MIMSMS_API_SECRET}
+  username: ${MIMSMS_USERNAME}
+  password: ${MIMSMS_PASSWORD}
+  senderId: ${MIMSMS_SENDER_ID}
+
+
   datasource:
-    url: "jdbc:mysql://localhost:3306/central_security"
-    username: "root"
-    password: "password"
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      connection-timeout: 30000
+      maximum-pool-size: 10
   jpa:
     hibernate:
-      ddl-auto: create-drop
-    show-sql: true
+      ddl-auto: update
+    open-in-view: false
     properties:
       hibernate:
-        format_sql: true
-    database: mysql
+        jdbc:
+          lob:
+            non_contextual_creation: true
+        id:
+          new_generator_mappings: true
+    show-sql: true
   security:
     user:
       name: admin
@@ -24,3 +112,15 @@ eureka:
       defaultZone: http://localhost:8761/eureka
 server:
   port: 0
+
+
+app:
+  baseHost: "http://localhost:9988"
+  cors:
+    allowed-origins:
+      - "http://localhost:3000"
+      - "http://localhost:9988"
+      - "http://localhost:4200"
+  google:
+    client-id: GOOGLE_CLIENT_ID.apps.googleusercontent.com
+    client-secret: GOOGLE_CLIENT_SECRET
